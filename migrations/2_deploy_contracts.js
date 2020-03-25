@@ -86,19 +86,22 @@ module.exports = async function(deployer) {
   lsr.startReleasing();
   await ecliptic.setSpawnProxy(0, lsr.address);
   await ecliptic.setSpawnProxy(1, csr.address);
-  await ecliptic.setTransferProxy(256, lsr.address);
+  await ecliptic.configureKeys(256, "0x123", "0x456", 1, false);
+  await ecliptic.setSpawnProxy(256, sending.address);
+  await ecliptic.spawn(65792, own);
   await lsr.register(user1, windup, 8, 2, rateUnit);
+  await sending.setPoolSize(256, 65792, 1000);
   console.log("Registered LSR");
   await csr.register(user1, [4, 1], 1, rateUnit);
   console.log("registered CSR");
 
-  for (let i = 2; i < 4; i++) {
+  for (let i = 2; i < 100; i++) {
     // await ecliptic.spawn(256 * i, user1);
-    const offset = 256 * i;
+    const offset = 65536 * i;
     console.log(`offset: ${offset}`);
-    await lsr.deposit(user1, offset);
+    await ecliptic.spawn(offset + 256, own);
+    await ecliptic.transferPoint(offset + 256, user1, false);
     console.log(`deposited: ${offset}`);
-    await csr.deposit(user1, offset + 1);
     console.log(`deposited: ${offset + 1}`);
   }
 };
